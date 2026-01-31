@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Calendar,
   ChevronRight,
@@ -62,6 +63,7 @@ export default function OrganizationFilesSection({
   organizations,
   storageUsage,
 }: OrganizationFilesSectionProps) {
+  const router = useRouter();
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [isDragging, setIsDragging] = useState(false);
@@ -308,6 +310,7 @@ export default function OrganizationFilesSection({
     } finally {
       setIsUploading(false);
       setUploadProgress(null);
+      router.refresh();
     }
 
     if (failures.length > 0) {
@@ -439,6 +442,7 @@ export default function OrganizationFilesSection({
               <div className="flex-1">
                 <div className="text-sm font-medium">Root</div>
                 <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                  {totalFolders} folder{totalFolders === 1 ? "" : "s"} ·{" "}
                   {rootFileCount} file{rootFileCount === 1 ? "" : "s"}
                 </div>
               </div>
@@ -566,9 +570,16 @@ export default function OrganizationFilesSection({
                   )}
                 </div>
                 <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  {totalFolders} folder{totalFolders === 1 ? "" : "s"} ·{" "}
-                  {totalFiles} file{totalFiles === 1 ? "" : "s"}
-                  {selectedFolder ? ` · ${folderFileCount} in folder` : ""}
+                  {selectedFolder ? (
+                    <>
+                      {folderFileCount} file{folderFileCount === 1 ? "" : "s"}
+                    </>
+                  ) : (
+                    <>
+                      {totalFolders} folder{totalFolders === 1 ? "" : "s"} ·{" "}
+                      {rootFileCount} file{rootFileCount === 1 ? "" : "s"}
+                    </>
+                  )}
                 </div>
               </div>
 
