@@ -473,7 +473,7 @@ export default function OrganizationFilesSection({
                 <div className="text-sm font-medium">Root</div>
                 <div className="text-xs text-zinc-500 dark:text-zinc-400">
                   {totalFolders} folder{totalFolders === 1 ? "" : "s"} ·{" "}
-                  {rootFileCount} file{rootFileCount === 1 ? "" : "s"}
+                  {totalFiles} file{totalFiles === 1 ? "" : "s"}
                 </div>
               </div>
             </button>
@@ -607,7 +607,7 @@ export default function OrganizationFilesSection({
                   ) : (
                     <>
                       {totalFolders} folder{totalFolders === 1 ? "" : "s"} ·{" "}
-                      {rootFileCount} file{rootFileCount === 1 ? "" : "s"}
+                      {totalFiles} file{totalFiles === 1 ? "" : "s"}
                     </>
                   )}
                 </div>
