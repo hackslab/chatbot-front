@@ -1,398 +1,320 @@
 # Chat SaaS API Documentation
 
-Base URL: `http://localhost:3000` (development)
+## Overview
 
-This API provides access to the Chat SaaS platform resources. All endpoints expect and return JSON.
+This API powers a SaaS platform for managing AI Chat Applications. It allows administrators to manage organizations, documents, and AI configurations, while providing a dedicated endpoint for end-users to interact with the AI bots.
 
-## Table of Contents
+## Base URL
 
-- [Admin](#admin)
-- [Organization](#organization)
-- [Application](#application)
-- [Folder](#folder)
-- [Document](#document)
-- [Model](#model)
-- [Application Docs](#application-docs)
-- [Document Embedding](#document-embedding)
-- [Session](#session)
-- [Message](#message)
+```
+http://localhost:3000
+```
+
+## Authentication
+
+The API uses two types of authentication:
+
+1.  **Admin Authentication (JWT):** Used for management endpoints (Organizations, Documents, Applications).
+    - **Header:** `Authorization: Bearer <access_token>`
+    - Obtain token via `/auth/login`.
+
+2.  **Application Authentication (API Key):** Used for the Chat interface.
+    - **Header:** `Authorization: Bearer <application_api_key>`
+    - The API Key is generated when creating an Application.
 
 ---
 
-## Admin
+## 1. Authentication
 
-Manage platform administrators.
+### Login
 
-### `POST /admin`
+Authenticate an admin user to receive a JWT access token.
 
-Create a new admin.
+- **Endpoint:** `POST /auth/login`
+- **Access:** Public
 
-**Body:**
+**Request Body:**
 
 ```json
 {
-  "name": "Admin Name",
   "username": "admin_user",
-  "password": "secure_password"
+  "password": "secret_password"
 }
 ```
 
-### `GET /admin`
-
-List all admins.
-
-### `GET /admin/:id`
-
-Get a specific admin by ID.
-
-### `PATCH /admin/:id`
-
-Update an admin.
-
-**Body:** (Partial of creation body)
+**Response (200 OK):**
 
 ```json
 {
-  "name": "Updated Name"
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
-
-### `DELETE /admin/:id`
-
-Remove an admin.
 
 ---
 
-## Organization
+## 2. Chat (End-User)
 
-Manage customer organizations.
+Endpoints for the actual AI chat functionality. These routes require the **Application API Key**.
 
-### `POST /organization`
+### Send Chat Message
 
-Create a new organization.
+Send a message to the AI agent associated with the API Key. The system handles context assembly (RAG) using documents assigned to the application.
 
-**Body:**
+- **Endpoint:** `POST /v1/chat/completions`
+- **Access:** Protected (`Bearer <API_KEY>`)
+
+**Request Body:**
 
 ```json
 {
-  "name": "Acme Corp",
-  "username": "acme_org", // Optional
-  "password": "org_password", // Optional
-  "contact": "someone@acme.com", // Optional
-  "description": "Description", // Optional
-  "isActive": true // Optional
+  "sessionId": "user-123-session-abc",
+  "source": "API",
+  "messages": [
+    {
+      "role": "USER",
+      "content": "What does the uploaded document say about pricing?"
+    }
+  ]
 }
 ```
 
-### `GET /organization`
+- `sessionId`: Unique identifier for the end-user or session.
+- `source`: Origin of the chat (Allowed: `TELEGRAM`, `API`, `WEB`).
+- `messages`: Array of message history. The last message with role `USER` is processed.
 
-List all organizations.
-_Note: Excludes sensitive fields like password and refreshToken._
+**Response (201 Created):**
 
-### `GET /organization/:id`
-
-Get organization details.
-
-### `PATCH /organization/:id`
-
-Update an organization.
-
-### `DELETE /organization/:id`
-
-Delete an organization.
+```json
+{
+  "id": "uuid-string",
+  "role": "ASSISTANT",
+  "content": "Based on the document, the pricing is...",
+  "created_at": "2023-10-27T10:00:00.000Z"
+}
+```
 
 ---
 
-## Application
+## 3. Admin Management
 
-Manage AI chat applications (chatbots).
+Endpoints for managing the platform administrators.
 
-### `POST /application`
+### Create Admin
 
-Create a new application. Auto-generates an API key.
+- **Endpoint:** `POST /admin`
+- **Body:**
+  ```json
+  {
+    "name": "John Doe",
+    "username": "jdoe",
+    "password": "securePassword123"
+  }
+  ```
 
-**Body:**
+### Get All Admins
 
-```json
-{
-  "name": "Support Bot",
-  "description": "Customer support assistant", // Optional
-  "system_prompt": "You are a helpful assistant.", // Optional
-  "model_id": "uuid-of-model", // Optional
-  "temperature": 0.7, // Optional
-  "is_active": true, // Optional
-  "organization_id": "uuid-of-organization"
-}
-```
+- **Endpoint:** `GET /admin`
 
-### `GET /application`
+### Get Admin by ID
 
-List all applications.
+- **Endpoint:** `GET /admin/:id`
 
-### `GET /application/:id`
+### Update Admin
 
-Get application details.
+- **Endpoint:** `PATCH /admin/:id`
+- **Body:** (Partial `CreateAdminDto`)
 
-### `PATCH /application/:id`
+### Delete Admin
 
-Update an application.
-
-### `DELETE /application/:id`
-
-Delete an application.
+- **Endpoint:** `DELETE /admin/:id`
 
 ---
 
-## Folder
+## 4. Organization Management
 
-Manage folders for organizing documents within an organization.
+Manage tenants/customers.
+**Base Path:** `/admin/organizations`
+**Auth:** JWT Required
 
-### `POST /folder`
+### Create Organization
 
-Create a new folder.
+- **Endpoint:** `POST /admin/organizations`
+- **Body:**
+  ```json
+  {
+    "name": "Acme Corp",
+    "slug": "acme-corp",
+    "contactInfo": "contact@acme.com",
+    "isActive": true
+  }
+  ```
 
-**Body:**
+### Get All Organizations
 
-```json
-{
-  "name": "Financial Reports",
-  "organization_id": "uuid-of-organization"
-}
-```
+- **Endpoint:** `GET /admin/organizations`
 
-### `GET /folder`
+### Get Organization by ID
 
-List all folders.
+- **Endpoint:** `GET /admin/organizations/:id`
 
-### `GET /folder/:id`
+### Update Organization
 
-Get folder details.
+- **Endpoint:** `PATCH /admin/organizations/:id`
+- **Body:** (Partial `CreateOrganizationDto`)
 
-### `PATCH /folder/:id`
+### Delete Organization
 
-Update a folder.
-
-### `DELETE /folder/:id`
-
-Delete a folder.
-
----
-
-## Document
-
-Manage uploaded documents for RAG.
-
-### `POST /document`
-
-Register a new document metadata entry.
-
-**Body:**
-
-```json
-{
-  "filename": "report_q1.pdf",
-  "file_type": "pdf", // Optional
-  "folder_id": "uuid-of-folder", // Optional
-  "organization_id": "uuid-of-org", // Optional
-  "storage_key": "path/to/r2/bucket/file.pdf",
-  "processing_status": "pending", // Optional: pending, processing, completed, failed, canceled
-  "token_count": 1000 // Optional
-}
-```
-
-### `GET /document`
-
-List all documents.
-
-### `GET /document/:id`
-
-Get document details.
-
-### `PATCH /document/:id`
-
-Update document details.
-
-### `DELETE /document/:id`
-
-Delete a document.
+- **Endpoint:** `DELETE /admin/organizations/:id`
+- **Note:** Performs a soft delete (sets `is_active` to false).
 
 ---
 
-## Model
+## 5. Folder Management
 
-Manage AI models available for applications.
+Manage folders to organize documents within an organization.
+**Base Path:** `/admin/folders`
+**Auth:** JWT Required
 
-### `POST /model`
+### Create Folder
 
-Add a new AI model configuration.
+- **Endpoint:** `POST /admin/folders`
+- **Body:**
+  ```json
+  {
+    "name": "Financial Reports",
+    "organizationId": "uuid-of-organization"
+  }
+  ```
 
-**Body:**
+### Get Folders
 
-```json
-{
-  "name": "GPT-4 Omni",
-  "key_name": "gpt-4o"
-}
-```
+- **Endpoint:** `GET /admin/folders`
+- **Query Params:** `?organizationId=<uuid>` (Optional)
 
-### `GET /model`
+### Update Folder
 
-List available models.
+- **Endpoint:** `PATCH /admin/folders/:id`
+- **Body:**
+  ```json
+  {
+    "name": "New Folder Name"
+  }
+  ```
 
-### `GET /model/:id`
+### Delete Folder
 
-Get model details.
-
-### `PATCH /model/:id`
-
-Update a model.
-
-### `DELETE /model/:id`
-
-Remove a model.
-
----
-
-## Application Docs
-
-Link folders to applications (Many-to-Many).
-
-### `POST /application-doc`
-
-Link a folder to an application.
-
-**Body:**
-
-```json
-{
-  "application_id": "uuid-of-application",
-  "folder_id": "uuid-of-folder"
-}
-```
-
-### `GET /application-doc`
-
-List all link records.
-
-### `GET /application-doc/:id`
-
-Get a specific link record.
-
-### `PATCH /application-doc/:id`
-
-Update a link record.
-
-### `DELETE /application-doc/:id`
-
-Remove a link.
+- **Endpoint:** `DELETE /admin/folders/:id`
 
 ---
 
-## Document Embedding
+## 6. Document Management
 
-Manage vector embeddings for documents.
+Upload and manage files for RAG (Retrieval-Augmented Generation).
+**Base Path:** `/admin/documents`
+**Auth:** JWT Required
 
-### `POST /document-embedding`
+### Upload Document
 
-Store an embedding chunk.
+Uploads a file to Google Cloud Storage and registers it in the database.
 
-**Body:**
+- **Endpoint:** `POST /admin/documents/upload`
+- **Content-Type:** `multipart/form-data`
+- **Body:**
+  - `file`: (Binary file data)
+  - `organizationId`: (UUID String)
+  - `folderId`: (UUID String, Optional)
 
-```json
-{
-  "document_id": "uuid-of-document",
-  "content": "Text content of the chunk...",
-  "embedding": [0.123, -0.456, ...], // Array of numbers
-  "chunk_index": 0,
-  "metadata": "{\"json\": \"string\"}" // Optional stringified JSON
-}
-```
+### Get Documents
 
-### `GET /document-embedding`
+- **Endpoint:** `GET /admin/documents`
+- **Query Params:**
+  - `organizationId=<uuid>`
+  - `folderId=<uuid>`
 
-List all embeddings.
+### Delete Document
 
-### `GET /document-embedding/:id`
-
-Get specific embedding.
-
-### `PATCH /document-embedding/:id`
-
-Update an embedding.
-
-### `DELETE /document-embedding/:id`
-
-Delete an embedding.
+- **Endpoint:** `DELETE /admin/documents/:id`
 
 ---
 
-## Session
+## 7. Application (Bot) Management
 
-Manage chat sessions.
+Manage the AI applications, their prompts, and assigned knowledge base.
+**Base Path:** `/admin/applications`
+**Auth:** JWT Required (Implied by path structure)
 
-### `POST /session`
+### Create Application
 
-Start a new chat session.
+Creates a new bot and automatically generates an API Key.
 
-**Body:**
+- **Endpoint:** `POST /admin/applications`
+- **Body:**
+  ```json
+  {
+    "name": "Customer Support Bot",
+    "system_prompt": "You are a helpful assistant for Acme Corp.",
+    "ai_model_id": "uuid-of-ai-model",
+    "organization_id": "uuid-of-organization",
+    "temperature": 0.7
+  }
+  ```
 
-```json
-{
-  "external_user_id": "user-123", // Optional
-  "platform": "telegram", // Optional
-  "application_id": "uuid-of-app", // Optional
-  "total_tokens": 0 // Optional
-}
-```
+### Get All Applications
 
-### `GET /session`
+- **Endpoint:** `GET /admin/applications`
 
-List all sessions.
+### Get Application by ID
 
-### `GET /session/:id`
+- **Endpoint:** `GET /admin/applications/:id`
 
-Get session details.
+### Update Application
 
-### `PATCH /session/:id`
+- **Endpoint:** `PATCH /admin/applications/:id`
+- **Body:** (Partial `CreateApplicationDto`)
 
-Update session (e.g., token usage).
+### Delete Application
 
-### `DELETE /session/:id`
+- **Endpoint:** `DELETE /admin/applications/:id`
 
-Delete a session.
+### Assign Documents to Application
+
+Link specific documents to an application for context.
+
+- **Endpoint:** `POST /admin/applications/:id/documents`
+- **Body:**
+  ```json
+  {
+    "documentIds": ["uuid-doc-1", "uuid-doc-2"]
+  }
+  ```
+
+### Get Assigned Documents
+
+- **Endpoint:** `GET /admin/applications/:id/documents`
+
+### Remove Document from Application
+
+- **Endpoint:** `DELETE /admin/applications/:id/documents/:documentId`
+
+### Regenerate API Key
+
+Revokes the old key and creates a new one for the application.
+
+- **Endpoint:** `POST /admin/applications/:id/regenerate-key`
 
 ---
 
-## Message
+## Data Models (Reference)
 
-Manage chat messages within settings.
+### Enums
 
-### `POST /message`
+- **User Source:** `TELEGRAM`, `API`, `WEB`
+- **Message Role:** `USER`, `ASSISTANT`
+- **Client Status:** `ACTIVE`, `SUSPENDED`, `ARCHIVED`
 
-Add a message to a session.
+### Error Handling
 
-**Body:**
-
-```json
-{
-  "role": 1, // 0 for user, 1 for assistant (or as defined in your enum/logic)
-  "content": "Hello world",
-  "session_id": "uuid-of-session" // Optional, but usually required to link
-}
-```
-
-### `GET /message`
-
-List all messages.
-
-### `GET /message/:id`
-
-Get message details.
-
-### `PATCH /message/:id`
-
-Update a message.
-
-### `DELETE /message/:id`
-
-Delete a message.
+- **401 Unauthorized:** Missing or invalid Token/API Key.
+- **404 Not Found:** Resource does not exist.
+- **422 Unprocessable Entity:** Validation failed (e.g., missing file in upload).
+- **500 Internal Server Error:** Server-side issues.
