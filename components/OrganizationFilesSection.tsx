@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   Calendar,
   ChevronRight,
+  Download,
   Eye,
   FileText,
   Folder,
@@ -14,6 +15,7 @@ import {
   Search,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 import {
   Document,
   Folder as FolderType,
@@ -356,6 +358,33 @@ export default function OrganizationFilesSection({
     dragCounter.current = 0;
     setIsDragging(false);
     void handleUploadFiles(event.dataTransfer.files);
+  }
+
+  async function handleDownload(doc: Document) {
+    const toastId = toast.loading("Downloading...");
+    try {
+      const response = await fetch(`/api/documents/${doc.id}/download`);
+      if (!response.ok) {
+        if (response.status === 404) throw new Error("File not found");
+        throw new Error("Download failed");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = doc.filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.dismiss(toastId);
+      toast.success("Download started");
+    } catch (error) {
+      console.error(error);
+      toast.dismiss(toastId);
+      toast.error("Failed to download file");
+    }
   }
 
   const uploadPercent = uploadProgress
@@ -739,6 +768,14 @@ export default function OrganizationFilesSection({
                       </span>
                     </div>
                     <div className="flex items-center gap-3 md:justify-end">
+                      <button
+                        type="button"
+                        onClick={() => handleDownload(doc)}
+                        className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                        title="Download"
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
                       <DeleteDocumentButton documentId={doc.id} iconOnly />
                     </div>
                   </div>
