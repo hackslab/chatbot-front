@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AiModel, Application, Organization } from "@/lib/types";
 import CreateApplicationModal from "@/components/CreateApplicationModal";
 import { Bot, Zap, Calendar, ArrowRight } from "lucide-react";
+import { formatApplicationType, resolveApplicationType } from "@/lib/application";
 
 type OrganizationApplicationsSectionProps = {
   organizationId: string;
@@ -103,6 +104,18 @@ export default function OrganizationApplicationsSection({
                         <Bot className="h-4 w-4 text-indigo-500" />
                       </div>
                       <div className="flex-1">
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-0.5">Channel</p>
+                        <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                          {formatApplicationType(resolveApplicationType(application))}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">
+                        <Bot className="h-4 w-4 text-indigo-500" />
+                      </div>
+                      <div className="flex-1">
                         <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-0.5">AI Model</p>
                         <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
                           {aiModels.find(m => m.id === application.ai_model_id)?.name || application.ai_model_id}
@@ -144,6 +157,9 @@ export default function OrganizationApplicationsSection({
                   AI Model
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                  Type
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
                   Temperature
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
@@ -158,7 +174,7 @@ export default function OrganizationApplicationsSection({
               {applications.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-6 py-12 text-center text-zinc-500"
                   >
                     No applications found.
@@ -197,6 +213,9 @@ export default function OrganizationApplicationsSection({
                           {aiModels.find(m => m.id === application.ai_model_id)?.name || application.ai_model_id}
                         </span>
                       </div>
+                    </td>
+                    <td className="px-6 py-4 text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                      {formatApplicationType(resolveApplicationType(application))}
                     </td>
                     <td className="px-6 py-4">
                       <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold">

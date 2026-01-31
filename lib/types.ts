@@ -58,6 +58,13 @@ export interface CreateAiModelDto {
   key: string;
 }
 
+export type ApplicationType =
+  | "API"
+  | "TELEGRAM_BOT"
+  | "INSTAGRAM"
+  | "WHATSAPP"
+  | "FACEBOOK";
+
 export interface Application {
   id: string;
   name: string;
@@ -65,7 +72,9 @@ export interface Application {
   ai_model_id: string;
   organization_id: string;
   temperature: number;
-  api_key?: string;
+  type: ApplicationType;
+  api_key?: string | null;
+  bot_token?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -94,6 +103,8 @@ export interface CreateApplicationDto {
   ai_model_id: string;
   organization_id: string;
   temperature?: number;
+  type?: ApplicationType;
+  bot_token?: string;
 }
 
 export interface UpdateApplicationDto extends Partial<CreateApplicationDto> {}

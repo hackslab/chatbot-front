@@ -10,9 +10,11 @@ import {
   Organization,
 } from "@/lib/types";
 import ApiKeyCard from "@/components/ApiKeyCard";
+import BotTokenCard from "@/components/BotTokenCard";
 import AssignDocumentsModal from "@/components/AssignDocumentsModal";
 import RemoveAssignedDocumentButton from "@/components/RemoveAssignedDocumentButton";
 import EditApplicationModal from "@/components/EditApplicationModal";
+import { formatApplicationType, resolveApplicationType } from "@/lib/application";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
@@ -244,6 +246,7 @@ export default async function OrganizationApplicationDetailsPage({
     ]);
 
   const assignedIds = assignedDocuments.map((doc) => doc.id);
+  const resolvedType = resolveApplicationType(application);
 
   return (
     <div className="space-y-6">
@@ -309,6 +312,14 @@ export default async function OrganizationApplicationDetailsPage({
             </div>
             <div className="grid grid-cols-3 gap-4">
               <dt className="font-medium text-zinc-500 dark:text-zinc-400">
+                Channel
+              </dt>
+              <dd className="col-span-2 font-medium text-zinc-900 dark:text-zinc-100">
+                {formatApplicationType(resolvedType)}
+              </dd>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <dt className="font-medium text-zinc-500 dark:text-zinc-400">
                 Temperature
               </dt>
               <dd className="col-span-2 text-zinc-900 dark:text-zinc-100">
@@ -326,7 +337,20 @@ export default async function OrganizationApplicationDetailsPage({
           </dl>
         </div>
 
-        <ApiKeyCard applicationId={application.id} apiKey={application.api_key} />
+        {resolvedType === "API" ? (
+          <ApiKeyCard applicationId={application.id} apiKey={application.api_key ?? undefined} />
+        ) : resolvedType === "TELEGRAM_BOT" ? (
+          <BotTokenCard botToken={application.bot_token} />
+        ) : (
+          <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+              Channel Credentials
+            </h2>
+            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+              Credentials for this channel are not configurable yet.
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
