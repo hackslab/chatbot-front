@@ -56,7 +56,7 @@ export default function OrganizationDetailsView({
             </svg>
           </Link>
           <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-            {org.name}
+            Organization: {org.name}
           </h1>
         </div>
         <EditOrganizationModal organization={org} />
