@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { Unlink } from "lucide-react";
 import { removeDocumentFromApplication } from "@/lib/actions";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
@@ -25,7 +26,10 @@ export default function RemoveAssignedDocumentButton({
     setShowConfirm(false);
 
     setLoading(true);
-    const result = await removeDocumentFromApplication(applicationId, documentId);
+    const result = await removeDocumentFromApplication(
+      applicationId,
+      documentId,
+    );
 
     if (result?.error) {
       toast.error(result.error);
@@ -45,9 +49,11 @@ export default function RemoveAssignedDocumentButton({
       <button
         onClick={handleRemoveClick}
         disabled={loading}
-        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-60"
+        className="rounded-lg p-2 text-zinc-400 hover:bg-red-50 hover:text-red-600 dark:text-zinc-500 dark:hover:bg-red-900/20 dark:hover:text-red-300 disabled:opacity-60 transition-colors"
+        title="Remove document"
+        aria-label="Remove document"
       >
-        {loading ? "Removing..." : "Remove"}
+        <Unlink className="h-4 w-4" />
       </button>
 
       <ConfirmDialog

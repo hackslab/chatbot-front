@@ -2,6 +2,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AiModel } from "@/lib/types";
 import CreateAiModelModal from "@/components/CreateAiModelModal";
+import EditAiModelModal from "@/components/EditAiModelModal";
+import DeleteAiModelButton from "@/components/DeleteAiModelButton";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
@@ -64,13 +66,16 @@ export default async function AiModelsPage() {
                 <th scope="col" className="px-6 py-3">
                   Created
                 </th>
+                <th scope="col" className="relative px-6 py-3">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
               {aiModels.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="px-6 py-12 text-center text-zinc-500"
                   >
                     No AI models found.
@@ -85,16 +90,18 @@ export default async function AiModelsPage() {
                     <td className="px-6 py-4 font-medium text-zinc-900 dark:text-zinc-100">
                       {model.name}
                     </td>
-                    <td className="px-6 py-4 font-mono text-xs">
-                      {model.key}
-                    </td>
-                    <td className="px-6 py-4 font-mono text-xs">
-                      {model.id}
-                    </td>
+                    <td className="px-6 py-4 font-mono text-xs">{model.key}</td>
+                    <td className="px-6 py-4 font-mono text-xs">{model.id}</td>
                     <td className="px-6 py-4">
                       {model.created_at
                         ? new Date(model.created_at).toLocaleDateString()
                         : "--"}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <EditAiModelModal model={model} />
+                        <DeleteAiModelButton modelId={model.id} iconOnly />
+                      </div>
                     </td>
                   </tr>
                 ))

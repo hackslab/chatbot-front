@@ -11,6 +11,7 @@ import {
   CreateApplicationDto,
   UpdateApplicationDto,
   CreateAiModelDto,
+  UpdateAiModelDto,
 } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
@@ -373,6 +374,72 @@ export async function createAiModel(data: CreateAiModelDto) {
     return { success: true, aiModel: created };
   } catch (err) {
     console.error("Create AI Model Error:", err);
+    return { error: "Failed to connect to server" };
+  }
+}
+
+export async function updateAiModel(id: string, data: UpdateAiModelDto) {
+  const token = await getAdminToken();
+
+  if (!token) {
+    return { error: "Not authenticated" };
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/admin/ai-models/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    await handleUnauthorized(res);
+
+    if (!res.ok) {
+      return {
+        error: await parseErrorMessage(res, "Failed to update AI model"),
+      };
+    }
+
+    revalidatePath("/admin/ai-models");
+    revalidatePath("/admin/applications");
+    return { success: true };
+  } catch (err) {
+    console.error("Update AI Model Error:", err);
+    return { error: "Failed to connect to server" };
+  }
+}
+
+export async function deleteAiModel(id: string) {
+  const token = await getAdminToken();
+
+  if (!token) {
+    return { error: "Not authenticated" };
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/admin/ai-models/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    await handleUnauthorized(res);
+
+    if (!res.ok) {
+      return {
+        error: await parseErrorMessage(res, "Failed to delete AI model"),
+      };
+    }
+
+    revalidatePath("/admin/ai-models");
+    revalidatePath("/admin/applications");
+    return { success: true };
+  } catch (err) {
+    console.error("Delete AI Model Error:", err);
     return { error: "Failed to connect to server" };
   }
 }

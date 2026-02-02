@@ -383,6 +383,7 @@ export default async function ApplicationDetailsPage({
             documents={documents}
             folders={folders}
             assignedDocumentIds={assignedIds}
+            iconOnly
           />
         </div>
 

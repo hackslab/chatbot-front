@@ -58,6 +58,8 @@ export interface CreateAiModelDto {
   key: string;
 }
 
+export interface UpdateAiModelDto extends Partial<CreateAiModelDto> {}
+
 export type ApplicationType =
   | "API"
   | "TELEGRAM_BOT"

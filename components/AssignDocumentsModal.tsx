@@ -4,11 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { assignDocumentsToApplication } from "@/lib/actions";
 import { Document, Folder as FolderType } from "@/lib/types";
 import {
+  Check,
   ChevronLeft,
   ChevronRight,
   FileText,
   Folder,
   FolderOpen,
+  Minus,
+  Plus,
 } from "lucide-react";
 
 interface AssignDocumentsModalProps {
@@ -16,19 +19,47 @@ interface AssignDocumentsModalProps {
   documents: Document[];
   folders: FolderType[];
   assignedDocumentIds: string[];
+  iconOnly?: boolean;
 }
 
-type FolderRowProps = {
-  folder: FolderType;
-  documentCount: number;
-  selectedCount: number;
-  isChecked: boolean;
-  isIndeterminate: boolean;
+function DocumentRow({
+  doc,
+  checked,
+  onToggle,
+}: {
+  doc: Document;
+  checked: boolean;
   onToggle: () => void;
-  onOpen?: () => void;
-  showOpen?: boolean;
-  className?: string;
-};
+}) {
+  return (
+    <div
+      onClick={onToggle}
+      className={`flex items-center gap-3 rounded-lg border p-3 transition-colors cursor-pointer ${
+        checked
+          ? "border-indigo-600 bg-indigo-50 dark:border-indigo-500 dark:bg-indigo-900/20"
+          : "border-zinc-200 bg-white hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700/50"
+      }`}
+    >
+      <div
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
+          checked
+            ? "border-indigo-600 bg-indigo-600 text-white dark:border-indigo-500 dark:bg-indigo-500"
+            : "border-zinc-300 bg-white dark:border-zinc-600 dark:bg-zinc-900"
+        }`}
+      >
+        {checked && <Check className="h-3.5 w-3.5" />}
+      </div>
+      <div className="flex items-center gap-3 overflow-hidden">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+          <FileText className="h-4 w-4" />
+        </div>
+        <div className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
+          {doc.filename}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function FolderRow({
   folder,
@@ -39,98 +70,80 @@ function FolderRow({
   onToggle,
   onOpen,
   showOpen = true,
-  className,
-}: FolderRowProps) {
-  const checkboxRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (checkboxRef.current) {
-      checkboxRef.current.indeterminate = isIndeterminate;
-    }
-  }, [isIndeterminate]);
-
-  const metaText = documentCount === 0
-    ? "Empty folder"
-    : selectedCount > 0
-      ? `${selectedCount} selected`
-      : `${documentCount} file${documentCount === 1 ? "" : "s"}`;
-
+  className = "",
+}: {
+  folder: FolderType;
+  documentCount: number;
+  selectedCount: number;
+  isChecked: boolean;
+  isIndeterminate: boolean;
+  onToggle: () => void;
+  onOpen?: () => void;
+  showOpen?: boolean;
+  className?: string;
+}) {
   return (
     <div
-      className={`flex items-center justify-between gap-3 rounded-md p-2 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 ${
-        className || ""
+      className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${className} ${
+        isChecked && documentCount > 0
+          ? "border-indigo-200 bg-indigo-50 dark:border-indigo-800 dark:bg-indigo-900/10"
+          : "border-zinc-200 bg-white hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700/50"
       }`}
     >
-      <div className="flex items-center gap-3">
-        <input
-          ref={checkboxRef}
-          type="checkbox"
-          checked={isChecked}
-          onChange={onToggle}
-          disabled={documentCount === 0}
-          className="mt-0.5 h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-600 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800"
-        />
-        <button
-          type="button"
-          onDoubleClick={showOpen ? onOpen : undefined}
-          className="flex items-center gap-2 text-left"
-          title={showOpen ? "Double click to open" : undefined}
+      <div className="flex items-center gap-3 overflow-hidden">
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle();
+          }}
+          className={`flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded border ${
+            isChecked
+              ? "border-indigo-600 bg-indigo-600 text-white dark:border-indigo-500 dark:bg-indigo-500"
+              : isIndeterminate
+                ? "border-indigo-600 bg-indigo-600 text-white dark:border-indigo-500 dark:bg-indigo-500"
+                : "border-zinc-300 bg-white dark:border-zinc-600 dark:bg-zinc-900"
+          }`}
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30">
-            <Folder className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-          </div>
-          <div>
-            <span className="block text-sm font-medium text-zinc-900 dark:text-zinc-100">
-              {folder.name}
-            </span>
-            <span className="block text-xs text-zinc-500 dark:text-zinc-400">
-              {metaText}
-            </span>
-          </div>
-        </button>
-      </div>
-      {showOpen && (
-        <button
-          type="button"
+          {isChecked && <Check className="h-3.5 w-3.5" />}
+          {isIndeterminate && <Minus className="h-3.5 w-3.5" />}
+        </div>
+
+        <div
           onClick={onOpen}
-          disabled={!onOpen}
-          className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-zinc-800"
-          aria-label={`Open ${folder.name}`}
+          className={`flex items-center gap-3 overflow-hidden ${
+            onOpen ? "cursor-pointer" : ""
+          }`}
         >
-          <span className="hidden sm:inline">Open</span>
-          <ChevronRight className="h-4 w-4" />
+          {onOpen ? (
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
+              <Folder className="h-4 w-4" />
+            </div>
+          ) : (
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-blue-50 text-blue-500 dark:bg-blue-900/20 dark:text-blue-400">
+              <FolderOpen className="h-4 w-4" />
+            </div>
+          )}
+          <div className="truncate">
+            <div className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
+              {folder.name}
+            </div>
+            <div className="text-xs text-zinc-500 dark:text-zinc-400">
+              {selectedCount} / {documentCount} selected
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {showOpen && onOpen && (
+        <button
+          onClick={onOpen}
+          type="button"
+          className="shrink-0 rounded-full p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-300"
+        >
+          <ChevronRight className="h-5 w-5" />
         </button>
       )}
     </div>
-  );
-}
-
-type DocumentRowProps = {
-  doc: Document;
-  checked: boolean;
-  onToggle: () => void;
-};
-
-function DocumentRow({ doc, checked, onToggle }: DocumentRowProps) {
-  return (
-    <label className="flex items-start gap-3 rounded-md p-2 hover:bg-zinc-50 dark:hover:bg-zinc-800/60">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onToggle}
-        className="mt-1 h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-600 dark:border-zinc-700 dark:bg-zinc-800"
-      />
-      <div className="flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
-          <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-        </div>
-        <div>
-          <span className="block text-sm font-medium text-zinc-900 dark:text-zinc-100">
-            {doc.filename}
-          </span>
-        </div>
-      </div>
-    </label>
   );
 }
 
@@ -139,6 +152,7 @@ export default function AssignDocumentsModal({
   documents,
   folders,
   assignedDocumentIds,
+  iconOnly = false,
 }: AssignDocumentsModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState("");
@@ -148,107 +162,112 @@ export default function AssignDocumentsModal({
   );
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      setSelectedDocumentIds(new Set());
-      setCurrentFolderId(null);
-      setError("");
-      setLoading(false);
-    }
-  }, [isOpen]);
-
+  // Filter out documents that are already assigned
   const availableDocuments = useMemo(() => {
     return documents.filter((doc) => !assignedDocumentIds.includes(doc.id));
   }, [documents, assignedDocumentIds]);
 
-  const documentsByFolderId = useMemo(() => {
-    const map = new Map<string, Document[]>();
-    availableDocuments.forEach((doc) => {
-      if (!doc.folder_id) return;
-      const bucket = map.get(doc.folder_id) || [];
-      bucket.push(doc);
-      map.set(doc.folder_id, bucket);
-    });
-    return map;
-  }, [availableDocuments]);
+  // Group available documents by folder
+  const folderEntries = useMemo(() => {
+    return folders
+      .map((folder) => {
+        const folderDocs = availableDocuments.filter(
+          (doc) => doc.folder_id === folder.id,
+        );
+        return { folder, documents: folderDocs };
+      })
+      .filter((entry) => entry.documents.length > 0);
+  }, [folders, availableDocuments]);
 
+  // Documents in the root (no folder)
   const rootDocuments = useMemo(() => {
     return availableDocuments.filter((doc) => !doc.folder_id);
   }, [availableDocuments]);
 
-  const folderEntries = useMemo(() => {
-    return folders.map((folder) => ({
-      folder,
-      documents: documentsByFolderId.get(folder.id) || [],
-    }));
-  }, [folders, documentsByFolderId]);
-
+  // Current folder data
   const currentFolder = useMemo(() => {
-    return folders.find((folder) => folder.id === currentFolderId) || null;
+    return folders.find((f) => f.id === currentFolderId) || null;
   }, [folders, currentFolderId]);
 
   const currentFolderDocuments = useMemo(() => {
     if (!currentFolderId) return [];
-    return documentsByFolderId.get(currentFolderId) || [];
-  }, [currentFolderId, documentsByFolderId]);
+    return availableDocuments.filter(
+      (doc) => doc.folder_id === currentFolderId,
+    );
+  }, [availableDocuments, currentFolderId]);
 
   const selectedCount = selectedDocumentIds.size;
 
-  function toggleDocument(docId: string) {
-    setSelectedDocumentIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(docId)) {
-        next.delete(docId);
+  const toggleDocument = (docId: string) => {
+    const newSelected = new Set(selectedDocumentIds);
+    if (newSelected.has(docId)) {
+      newSelected.delete(docId);
+    } else {
+      newSelected.add(docId);
+    }
+    setSelectedDocumentIds(newSelected);
+  };
+
+  const toggleFolder = (folderId: string) => {
+    const folderDocs = availableDocuments.filter(
+      (doc) => doc.folder_id === folderId,
+    );
+    const allSelected =
+      folderDocs.length > 0 &&
+      folderDocs.every((doc) => selectedDocumentIds.has(doc.id));
+
+    const newSelected = new Set(selectedDocumentIds);
+    folderDocs.forEach((doc) => {
+      if (allSelected) {
+        newSelected.delete(doc.id);
       } else {
-        next.add(docId);
+        newSelected.add(doc.id);
       }
-      return next;
     });
-  }
+    setSelectedDocumentIds(newSelected);
+  };
 
-  function toggleFolder(folderId: string) {
-    const folderDocs = documentsByFolderId.get(folderId) || [];
-    if (folderDocs.length === 0) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedDocumentIds.size === 0) return;
 
-    setSelectedDocumentIds((prev) => {
-      const next = new Set(prev);
-      const allSelected = folderDocs.every((doc) => next.has(doc.id));
-      folderDocs.forEach((doc) => {
-        if (allSelected) {
-          next.delete(doc.id);
-        } else {
-          next.add(doc.id);
-        }
-      });
-      return next;
-    });
-  }
-
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
     setLoading(true);
     setError("");
 
-    const documentIds = Array.from(selectedDocumentIds);
+    try {
+      const result = await assignDocumentsToApplication(
+        applicationId,
+        Array.from(selectedDocumentIds),
+      );
 
-    if (documentIds.length === 0) {
-      setError("Select at least one document.");
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setIsOpen(false);
+        setSelectedDocumentIds(new Set());
+        setCurrentFolderId(null);
+      }
+    } catch (err) {
+      setError("An unexpected error occurred");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const result = await assignDocumentsToApplication(applicationId, documentIds);
-
-    if (result?.error) {
-      setError(result.error);
-      setLoading(false);
-    } else {
-      setLoading(false);
-      setIsOpen(false);
-    }
-  }
+  };
 
   if (!isOpen) {
+    if (iconOnly) {
+      return (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300 transition-colors"
+          title="Assign documents"
+          aria-label="Assign documents"
+        >
+          <Plus className="h-5 w-5" />
+        </button>
+      );
+    }
+
     return (
       <button
         onClick={() => setIsOpen(true)}
@@ -331,14 +350,24 @@ export default function AssignDocumentsModal({
                       <FolderRow
                         folder={currentFolder}
                         documentCount={currentFolderDocuments.length}
-                        selectedCount={currentFolderDocuments.filter((doc) => selectedDocumentIds.has(doc.id)).length}
+                        selectedCount={
+                          currentFolderDocuments.filter((doc) =>
+                            selectedDocumentIds.has(doc.id),
+                          ).length
+                        }
                         isChecked={
                           currentFolderDocuments.length > 0 &&
-                          currentFolderDocuments.every((doc) => selectedDocumentIds.has(doc.id))
+                          currentFolderDocuments.every((doc) =>
+                            selectedDocumentIds.has(doc.id),
+                          )
                         }
                         isIndeterminate={
-                          currentFolderDocuments.some((doc) => selectedDocumentIds.has(doc.id)) &&
-                          !currentFolderDocuments.every((doc) => selectedDocumentIds.has(doc.id))
+                          currentFolderDocuments.some((doc) =>
+                            selectedDocumentIds.has(doc.id),
+                          ) &&
+                          !currentFolderDocuments.every((doc) =>
+                            selectedDocumentIds.has(doc.id),
+                          )
                         }
                         onToggle={() => toggleFolder(currentFolder.id)}
                         showOpen={false}
@@ -376,30 +405,35 @@ export default function AssignDocumentsModal({
                         </div>
                       ) : (
                         <div className="mt-2 space-y-1">
-                          {folderEntries.map(({ folder, documents: folderDocs }) => {
-                            const selectedInFolder = folderDocs.filter((doc) =>
-                              selectedDocumentIds.has(doc.id),
-                            ).length;
-                            const allSelected =
-                              folderDocs.length > 0 &&
-                              folderDocs.every((doc) => selectedDocumentIds.has(doc.id));
-                            const someSelected =
-                              folderDocs.some((doc) => selectedDocumentIds.has(doc.id)) &&
-                              !allSelected;
+                          {folderEntries.map(
+                            ({ folder, documents: folderDocs }) => {
+                              const selectedInFolder = folderDocs.filter(
+                                (doc) => selectedDocumentIds.has(doc.id),
+                              ).length;
+                              const allSelected =
+                                folderDocs.length > 0 &&
+                                folderDocs.every((doc) =>
+                                  selectedDocumentIds.has(doc.id),
+                                );
+                              const someSelected =
+                                folderDocs.some((doc) =>
+                                  selectedDocumentIds.has(doc.id),
+                                ) && !allSelected;
 
-                            return (
-                              <FolderRow
-                                key={folder.id}
-                                folder={folder}
-                                documentCount={folderDocs.length}
-                                selectedCount={selectedInFolder}
-                                isChecked={allSelected}
-                                isIndeterminate={someSelected}
-                                onToggle={() => toggleFolder(folder.id)}
-                                onOpen={() => setCurrentFolderId(folder.id)}
-                              />
-                            );
-                          })}
+                              return (
+                                <FolderRow
+                                  key={folder.id}
+                                  folder={folder}
+                                  documentCount={folderDocs.length}
+                                  selectedCount={selectedInFolder}
+                                  isChecked={allSelected}
+                                  isIndeterminate={someSelected}
+                                  onToggle={() => toggleFolder(folder.id)}
+                                  onOpen={() => setCurrentFolderId(folder.id)}
+                                />
+                              );
+                            },
+                          )}
                         </div>
                       )}
                     </div>
