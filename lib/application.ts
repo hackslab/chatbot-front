@@ -20,13 +20,3 @@ export function formatApplicationType(type?: ApplicationType) {
   if (!type) return "API";
   return APPLICATION_TYPE_LABELS[type] ?? type;
 }
-
-export function resolveApplicationType(application: {
-  type?: ApplicationType | null;
-  bot_token?: string | null;
-  api_key?: string | null;
-}) {
-  if (application.type && application.type !== "API") return application.type;
-  if (application.bot_token) return "TELEGRAM_BOT";
-  return application.type ?? "API";
-}

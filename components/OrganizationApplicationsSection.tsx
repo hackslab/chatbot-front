@@ -9,16 +9,7 @@ import {
   Zap,
   Calendar,
   ArrowRight,
-  Terminal,
-  Send,
-  Instagram,
-  Facebook,
-  MessageCircle,
 } from "lucide-react";
-import {
-  formatApplicationType,
-  resolveApplicationType,
-} from "@/lib/application";
 
 type OrganizationApplicationsSectionProps = {
   organizationId: string;
@@ -36,23 +27,6 @@ export default function OrganizationApplicationsSection({
   initialOrganizationId,
 }: OrganizationApplicationsSectionProps) {
   const [showCards, setShowCards] = useState(false);
-
-  const getApplicationIcon = (type: string) => {
-    switch (type) {
-      case "API":
-        return Terminal;
-      case "TELEGRAM_BOT":
-        return Send;
-      case "INSTAGRAM":
-        return Instagram;
-      case "FACEBOOK":
-        return Facebook;
-      case "WHATSAPP":
-        return MessageCircle;
-      default:
-        return Bot;
-    }
-  };
 
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
@@ -96,12 +70,7 @@ export default function OrganizationApplicationsSection({
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/25">
-                        {(() => {
-                          const Icon = getApplicationIcon(
-                            resolveApplicationType(application),
-                          );
-                          return <Icon className="h-6 w-6 text-white" />;
-                        })()}
+                        <Bot className="h-6 w-6 text-white" />
                       </div>
                       <div>
                         <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
@@ -137,22 +106,6 @@ export default function OrganizationApplicationsSection({
                                 ? "(Balanced)"
                                 : "(Precise)"}
                           </span>
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-sm">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">
-                        <Bot className="h-4 w-4 text-indigo-500" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-0.5">
-                          Channel
-                        </p>
-                        <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                          {formatApplicationType(
-                            resolveApplicationType(application),
-                          )}
                         </p>
                       </div>
                     </div>
@@ -209,9 +162,6 @@ export default function OrganizationApplicationsSection({
                   AI Model
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
-                  Type
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
                   Temperature
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
@@ -225,12 +175,12 @@ export default function OrganizationApplicationsSection({
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
               {applications.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={6}
-                    className="px-6 py-12 text-center text-zinc-500"
-                  >
-                    No applications found.
-                  </td>
+                    <td
+                      colSpan={5}
+                      className="px-6 py-12 text-center text-zinc-500"
+                    >
+                      No applications found.
+                    </td>
                 </tr>
               ) : (
                 applications.map((application) => (
@@ -241,12 +191,7 @@ export default function OrganizationApplicationsSection({
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/20">
-                          {(() => {
-                            const Icon = getApplicationIcon(
-                              resolveApplicationType(application),
-                            );
-                            return <Icon className="h-5 w-5 text-white" />;
-                          })()}
+                          <Bot className="h-5 w-5 text-white" />
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
@@ -274,11 +219,6 @@ export default function OrganizationApplicationsSection({
                           )?.name || application.ai_model_id}
                         </span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                      {formatApplicationType(
-                        resolveApplicationType(application),
-                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold">

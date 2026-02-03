@@ -12,6 +12,8 @@ import {
   UpdateApplicationDto,
   CreateAiModelDto,
   UpdateAiModelDto,
+  CreateProviderDto,
+  UpdateProviderDto,
 } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
@@ -520,7 +522,113 @@ export async function deleteApplication(id: string) {
   }
 }
 
-export async function regenerateApiKey(id: string) {
+export async function createProvider(applicationId: string, data: CreateProviderDto) {
+  const token = await getAdminToken();
+
+  if (!token) {
+    return { error: "Not authenticated" };
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/admin/applications/${applicationId}/providers`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    await handleUnauthorized(res);
+
+    if (!res.ok) {
+      return {
+        error: await parseErrorMessage(res, "Failed to create provider"),
+      };
+    }
+
+    const created = await res.json();
+    revalidatePath(`/admin/applications/${applicationId}`);
+    return { success: true, provider: created };
+  } catch (err) {
+    console.error("Create Provider Error:", err);
+    return { error: "Failed to connect to server" };
+  }
+}
+
+export async function updateProvider(providerId: string, data: UpdateProviderDto) {
+  const token = await getAdminToken();
+
+  if (!token) {
+    return { error: "Not authenticated" };
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/admin/providers/${providerId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    await handleUnauthorized(res);
+
+    if (!res.ok) {
+      return {
+        error: await parseErrorMessage(res, "Failed to update provider"),
+      };
+    }
+
+    const updated = await res.json();
+    revalidatePath("/admin/applications");
+    if (updated?.application_id) {
+      revalidatePath(`/admin/applications/${updated.application_id}`);
+    }
+    return { success: true, provider: updated };
+  } catch (err) {
+    console.error("Update Provider Error:", err);
+    return { error: "Failed to connect to server" };
+  }
+}
+
+export async function deleteProvider(providerId: string) {
+  const token = await getAdminToken();
+
+  if (!token) {
+    return { error: "Not authenticated" };
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/admin/providers/${providerId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    await handleUnauthorized(res);
+
+    if (!res.ok) {
+      return {
+        error: await parseErrorMessage(res, "Failed to delete provider"),
+      };
+    }
+
+    const deleted = await res.json();
+    revalidatePath("/admin/applications");
+    if (deleted?.application_id) {
+      revalidatePath(`/admin/applications/${deleted.application_id}`);
+    }
+    return { success: true, provider: deleted };
+  } catch (err) {
+    console.error("Delete Provider Error:", err);
+    return { error: "Failed to connect to server" };
+  }
+}
+
+export async function regenerateProviderKey(providerId: string) {
   const token = await getAdminToken();
 
   if (!token) {
@@ -529,7 +637,7 @@ export async function regenerateApiKey(id: string) {
 
   try {
     const res = await fetch(
-      `${API_URL}/admin/applications/${id}/regenerate-key`,
+      `${API_URL}/admin/providers/${providerId}/regenerate-key`,
       {
         method: "POST",
         headers: {
@@ -547,11 +655,13 @@ export async function regenerateApiKey(id: string) {
     }
 
     const updated = await res.json();
-    revalidatePath(`/admin/applications/${id}`);
     revalidatePath("/admin/applications");
-    return { success: true, apiKey: updated.api_key };
+    if (updated?.application_id) {
+      revalidatePath(`/admin/applications/${updated.application_id}`);
+    }
+    return { success: true, apiKey: updated.api_key, provider: updated };
   } catch (err) {
-    console.error("Regenerate Api Key Error:", err);
+    console.error("Regenerate Provider Key Error:", err);
     return { error: "Failed to connect to server" };
   }
 }

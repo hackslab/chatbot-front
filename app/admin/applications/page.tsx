@@ -6,7 +6,6 @@ import { AiModel, Application, Organization } from "@/lib/types";
 import CreateApplicationModal from "@/components/CreateApplicationModal";
 import EditApplicationModal from "@/components/EditApplicationModal";
 import DeleteApplicationButton from "@/components/DeleteApplicationButton";
-import { formatApplicationType, resolveApplicationType } from "@/lib/application";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
@@ -141,9 +140,6 @@ export default async function ApplicationsPage({
                   Model ID
                 </th>
                 <th scope="col" className="px-6 py-3">
-                  Type
-                </th>
-                <th scope="col" className="px-6 py-3">
                   Organization ID
                 </th>
                 <th scope="col" className="px-6 py-3">
@@ -158,7 +154,7 @@ export default async function ApplicationsPage({
               {filteredApplications.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={5}
                     className="px-6 py-12 text-center text-zinc-500"
                   >
                     No applications found.
@@ -175,9 +171,6 @@ export default async function ApplicationsPage({
                     </td>
                     <td className="px-6 py-4 font-mono text-xs">
                       {app.ai_model_id}
-                    </td>
-                    <td className="px-6 py-4 text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                      {formatApplicationType(resolveApplicationType(app))}
                     </td>
                     <td className="px-6 py-4 font-mono text-xs">
                       {app.organization_id}

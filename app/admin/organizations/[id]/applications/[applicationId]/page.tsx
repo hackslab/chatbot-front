@@ -8,18 +8,15 @@ import {
   Document,
   Folder,
   Organization,
+  Provider,
 } from "@/lib/types";
-import ApiKeyCard from "@/components/ApiKeyCard";
-import BotTokenCard from "@/components/BotTokenCard";
+import ProvidersCard from "@/components/ProvidersCard";
 import AssignDocumentsModal from "@/components/AssignDocumentsModal";
 import RemoveAssignedDocumentButton from "@/components/RemoveAssignedDocumentButton";
 import EditApplicationModal from "@/components/EditApplicationModal";
 import DeleteApplicationButton from "@/components/DeleteApplicationButton";
 import TestChatbotCard from "@/components/TestChatbotCard";
-import {
-  formatApplicationType,
-  resolveApplicationType,
-} from "@/lib/application";
+import { formatApplicationType } from "@/lib/application";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react"; // Import icons
 
 function StatusBadge({
@@ -133,6 +130,36 @@ async function getAssignedDocuments(id: string): Promise<AssignedDocument[]> {
     return res.json();
   } catch (error) {
     console.warn(`Error loading assigned documents ${id}:`, error);
+    return [];
+  }
+}
+
+async function getProviders(id: string): Promise<Provider[]> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("admin_token")?.value;
+
+    if (!token) return [];
+
+    const res = await fetch(`${API_URL}/admin/applications/${id}/providers`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+
+    if (res.status === 401) {
+      redirect("/");
+    }
+
+    if (!res.ok) {
+      console.warn(`Failed to fetch providers for ${id}:`, res.status);
+      return [];
+    }
+
+    return res.json();
+  } catch (error) {
+    console.warn(`Error loading providers ${id}:`, error);
     return [];
   }
 }
@@ -278,17 +305,22 @@ export default async function OrganizationApplicationDetailsPage({
     notFound();
   }
 
-  const [assignedDocuments, documents, organizations, aiModels, folders] =
+  const [assignedDocuments, documents, organizations, aiModels, folders, providers] =
     await Promise.all([
       getAssignedDocuments(applicationId),
       getDocuments(application.organization_id),
       getOrganizations(),
       getAiModels(),
       getFolders(application.organization_id),
+      getProviders(applicationId),
     ]);
 
   const assignedIds = assignedDocuments.map((doc) => doc.id);
-  const resolvedType = resolveApplicationType(application);
+  const providerSummary =
+    providers.length > 0
+      ? providers.map((provider) => formatApplicationType(provider.type)).join(", ")
+      : "No providers connected";
+  const apiProvider = providers.find((provider) => provider.type === "API");
 
   return (
     <div className="space-y-6">
@@ -371,10 +403,10 @@ export default async function OrganizationApplicationDetailsPage({
             </div>
             <div className="grid grid-cols-3 gap-4">
               <dt className="font-medium text-zinc-500 dark:text-zinc-400">
-                Channel
+                Providers
               </dt>
               <dd className="col-span-2 font-medium text-zinc-900 dark:text-zinc-100">
-                {formatApplicationType(resolvedType)}
+                {providerSummary}
               </dd>
             </div>
             <div className="grid grid-cols-3 gap-4">
@@ -396,27 +428,7 @@ export default async function OrganizationApplicationDetailsPage({
           </dl>
         </div>
 
-        {resolvedType === "API" ? (
-          <ApiKeyCard
-            applicationId={application.id}
-            apiKey={application.api_key ?? undefined}
-          />
-        ) : resolvedType === "TELEGRAM_BOT" ? (
-          <BotTokenCard
-            application={application}
-            organizations={organizations}
-            aiModels={aiModels}
-          />
-        ) : (
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-              Channel Credentials
-            </h2>
-            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-              Credentials for this channel are not configurable yet.
-            </p>
-          </div>
-        )}
+        <ProvidersCard applicationId={application.id} providers={providers} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -513,7 +525,7 @@ export default async function OrganizationApplicationDetailsPage({
 
         <TestChatbotCard
           applicationId={application.id}
-          apiKey={resolvedType === "API" ? application.api_key : null}
+          apiKey={apiProvider?.api_key ?? null}
         />
       </div>
     </div>

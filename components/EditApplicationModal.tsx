@@ -7,14 +7,9 @@ import { updateApplication } from "@/lib/actions";
 import {
   AiModel,
   Application,
-  ApplicationType,
   Organization,
   UpdateApplicationDto,
 } from "@/lib/types";
-import {
-  APPLICATION_TYPE_OPTIONS,
-  resolveApplicationType,
-} from "@/lib/application";
 
 interface EditApplicationModalProps {
   application: Application;
@@ -36,16 +31,12 @@ export default function EditApplicationModal({
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [selectedType, setSelectedType] = useState<ApplicationType>(
-    resolveApplicationType(application),
-  );
   const hasCurrentModel = aiModels.some(
     (model) => model.id === application.ai_model_id,
   );
   const [temperature, setTemperature] = useState(application.temperature);
 
   function handleOpen() {
-    setSelectedType(resolveApplicationType(application));
     setTemperature(application.temperature);
     setError("");
     setIsOpen(true);
@@ -71,7 +62,6 @@ export default function EditApplicationModal({
     const temperature = temperatureValue
       ? Number.parseFloat(temperatureValue)
       : undefined;
-    const bot_token = (formData.get("bot_token") as string) || "";
 
     const payload: UpdateApplicationDto = {
       name,
@@ -79,22 +69,6 @@ export default function EditApplicationModal({
       ai_model_id,
       organization_id,
     };
-
-    const typeChanged = selectedType !== application.type;
-    if (typeChanged) {
-      payload.type = selectedType;
-    }
-
-    if (selectedType === "TELEGRAM_BOT") {
-      if (typeChanged && !bot_token) {
-        setError("Telegram bot token is required when switching channels.");
-        setLoading(false);
-        return;
-      }
-      if (bot_token) {
-        payload.bot_token = bot_token;
-      }
-    }
 
     if (temperature !== undefined && !Number.isNaN(temperature)) {
       payload.temperature = temperature;
@@ -211,33 +185,6 @@ export default function EditApplicationModal({
               />
             </div>
 
-            <div>
-              <label
-                htmlFor="type"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                Channel
-              </label>
-              <select
-                id="type"
-                name="type"
-                value={selectedType}
-                onChange={(event) =>
-                  setSelectedType(event.target.value as ApplicationType)
-                }
-                className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-              >
-                {APPLICATION_TYPE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                API and Telegram are supported today. Other channels are for
-                future use.
-              </p>
-            </div>
 
             <div>
               <label
@@ -256,23 +203,6 @@ export default function EditApplicationModal({
               />
             </div>
 
-            {selectedType === "TELEGRAM_BOT" && (
-              <div>
-                <label
-                  htmlFor="bot_token"
-                  className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                >
-                  Telegram Bot Token
-                </label>
-                <input
-                  type="text"
-                  name="bot_token"
-                  id="bot_token"
-                  className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
-                  placeholder="Leave blank to keep current token"
-                />
-              </div>
-            )}
 
             <div>
               <label

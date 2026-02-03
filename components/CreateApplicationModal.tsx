@@ -5,11 +5,9 @@ import Link from "next/link";
 import { createApplication } from "@/lib/actions";
 import {
   AiModel,
-  ApplicationType,
   CreateApplicationDto,
   Organization,
 } from "@/lib/types";
-import { APPLICATION_TYPE_OPTIONS } from "@/lib/application";
 
 interface CreateApplicationModalProps {
   organizations: Organization[];
@@ -27,7 +25,6 @@ export default function CreateApplicationModal({
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [selectedType, setSelectedType] = useState<ApplicationType>("API");
   const [temperature, setTemperature] = useState(0.7);
 
   const initialOrgId =
@@ -40,7 +37,6 @@ export default function CreateApplicationModal({
   const initialModelId = aiModels[0]?.id || "";
 
   function handleOpen() {
-    setSelectedType("API");
     setTemperature(0.7);
     setError("");
     setIsOpen(true);
@@ -49,7 +45,6 @@ export default function CreateApplicationModal({
   function handleClose() {
     setIsOpen(false);
     setError("");
-    setSelectedType("API");
     setTemperature(0.7);
   }
 
@@ -67,17 +62,9 @@ export default function CreateApplicationModal({
     const temperature = temperatureValue
       ? Number.parseFloat(temperatureValue)
       : undefined;
-    const type = (formData.get("type") as ApplicationType) || "API";
-    const bot_token = (formData.get("bot_token") as string) || "";
 
     if (!ai_model_id) {
       setError("Select an AI model.");
-      setLoading(false);
-      return;
-    }
-
-    if (type === "TELEGRAM_BOT" && !bot_token) {
-      setError("Telegram bot token is required.");
       setLoading(false);
       return;
     }
@@ -87,12 +74,7 @@ export default function CreateApplicationModal({
       system_prompt,
       ai_model_id,
       organization_id,
-      type,
     };
-
-    if (type === "TELEGRAM_BOT") {
-      payload.bot_token = bot_token;
-    }
 
     if (temperature !== undefined && !Number.isNaN(temperature)) {
       payload.temperature = temperature;
@@ -193,33 +175,6 @@ export default function CreateApplicationModal({
               />
             </div>
 
-            <div>
-              <label
-                htmlFor="type"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                Channel
-              </label>
-              <select
-                id="type"
-                name="type"
-                value={selectedType}
-                onChange={(event) =>
-                  setSelectedType(event.target.value as ApplicationType)
-                }
-                className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-              >
-                {APPLICATION_TYPE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                API and Telegram are supported today. Other channels are for
-                future use.
-              </p>
-            </div>
 
             <div>
               <label
@@ -238,27 +193,6 @@ export default function CreateApplicationModal({
               />
             </div>
 
-            {selectedType === "TELEGRAM_BOT" && (
-              <div>
-                <label
-                  htmlFor="bot_token"
-                  className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                >
-                  Telegram Bot Token
-                </label>
-                <input
-                  type="text"
-                  name="bot_token"
-                  id="bot_token"
-                  required
-                  className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
-                  placeholder="123456:ABCDEF"
-                />
-                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  Use the token from BotFather to connect your Telegram bot.
-                </p>
-              </div>
-            )}
 
             <div>
               <label

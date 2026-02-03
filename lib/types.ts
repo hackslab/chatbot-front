@@ -43,6 +43,7 @@ export interface Document {
   size_bytes: number;
   organization_id: string;
   folder_id?: string | null;
+  vector_status?: DocumentStatus;
   created_at: string;
 }
 
@@ -77,12 +78,20 @@ export interface Application {
   ai_model_id: string;
   organization_id: string;
   temperature: number;
-  type: ApplicationType;
   status?: ApplicationStatus;
-  api_key?: string | null;
-  bot_token?: string | null;
   created_at?: string;
   updated_at?: string;
+}
+
+export interface Provider {
+  id: string;
+  application_id: string;
+  type: ApplicationType;
+  name?: string | null;
+  api_key?: string | null;
+  bot_token?: string | null;
+  is_active?: boolean;
+  created_at?: string;
 }
 
 export interface AssignedDocument {
@@ -111,8 +120,20 @@ export interface CreateApplicationDto {
   ai_model_id: string;
   organization_id: string;
   temperature?: number;
-  type?: ApplicationType;
-  bot_token?: string;
 }
 
 export interface UpdateApplicationDto extends Partial<CreateApplicationDto> {}
+
+export interface CreateProviderDto {
+  type: ApplicationType;
+  name?: string;
+  bot_token?: string;
+  config?: Record<string, unknown>;
+}
+
+export interface UpdateProviderDto {
+  name?: string;
+  bot_token?: string;
+  is_active?: boolean;
+  config?: Record<string, unknown>;
+}
