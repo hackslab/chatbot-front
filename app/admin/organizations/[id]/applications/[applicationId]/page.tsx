@@ -17,7 +17,7 @@ import EditApplicationModal from "@/components/EditApplicationModal";
 import DeleteApplicationButton from "@/components/DeleteApplicationButton";
 import TestChatbotCard from "@/components/TestChatbotCard";
 import { formatApplicationType } from "@/lib/application";
-import CollapsibleText from "@/components/CollapsibleText";
+import SystemPromptModal from "@/components/SystemPromptModal";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react"; // Import icons
 
 function StatusBadge({
@@ -431,7 +431,7 @@ export default async function OrganizationApplicationDetailsPage({
                 System Prompt
               </dt>
               <dd className="col-span-2">
-                <CollapsibleText text={application.system_prompt} />
+                <SystemPromptModal application={application} />
               </dd>
             </div>
           </dl>

@@ -65,7 +65,7 @@ export default function EditApplicationModal({
 
     const payload: UpdateApplicationDto = {
       name,
-      system_prompt,
+      // system_prompt is handled separately now
       ai_model_id,
       organization_id,
     };
@@ -184,25 +184,6 @@ export default function EditApplicationModal({
                 className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
               />
             </div>
-
-
-            <div>
-              <label
-                htmlFor="system_prompt"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                System Prompt
-              </label>
-              <textarea
-                name="system_prompt"
-                id="system_prompt"
-                defaultValue={application.system_prompt}
-                required
-                rows={4}
-                className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
-              />
-            </div>
-
 
             <div>
               <label

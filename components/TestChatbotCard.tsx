@@ -25,9 +25,11 @@ export default function TestChatbotCard({
   const [error, setError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
 
+  const [sessionTimestamp, setSessionTimestamp] = useState(() => Date.now());
+
   const sessionId = useMemo(
-    () => `admin-test-${applicationId}`,
-    [applicationId],
+    () => `admin-test-${applicationId}-${sessionTimestamp}`,
+    [applicationId, sessionTimestamp],
   );
   const canChat = Boolean(apiKey);
 
@@ -101,11 +103,19 @@ export default function TestChatbotCard({
   function handleReset() {
     setMessages([]);
     setError(null);
+    setSessionTimestamp(Date.now());
   }
 
   function handleInputChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
     setInput(event.target.value);
     if (error) setError(null);
+  }
+
+  function handleKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      handleSubmit(event as unknown as React.FormEvent<HTMLFormElement>);
+    }
   }
 
   return (
@@ -132,7 +142,7 @@ export default function TestChatbotCard({
 
       <div
         ref={listRef}
-        className="mt-4 flex min-h-[240px] flex-col gap-3 overflow-y-auto rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200"
+        className="mt-4 flex h-[400px] flex-col gap-3 overflow-y-auto rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200"
       >
         {messages.length === 0 ? (
           <p className="text-xs text-zinc-400">No messages yet.</p>
@@ -182,6 +192,7 @@ export default function TestChatbotCard({
         <textarea
           value={input}
           onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
           rows={3}
           placeholder="Ask a question about your knowledge base..."
           disabled={!canChat || isSending}
