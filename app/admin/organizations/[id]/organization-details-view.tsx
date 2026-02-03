@@ -120,6 +120,7 @@ export default function OrganizationDetailsView({
         organizationId={org.id}
         applicationsContent={
           <OrganizationApplicationsSection
+            key="applications-section"
             organizationId={org.id}
             applications={orgApplications}
             organizations={[org]}
@@ -129,6 +130,7 @@ export default function OrganizationDetailsView({
         }
         filesContent={
           <OrganizationFilesSection
+            key="files-section"
             organizationId={org.id}
             folders={folders}
             documents={documents}
