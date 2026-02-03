@@ -12,6 +12,7 @@ import {
   FolderOpen,
   HardDrive,
   Inbox,
+  Loader2,
   Search,
   X,
 } from "lucide-react";
@@ -750,8 +751,33 @@ export default function OrganizationFilesSection({
                         <FileText className="h-5 w-5 text-blue-600 dark:text-blue-300" />
                       </div>
                       <div>
-                        <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                          {doc.filename}
+                        <div className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                          <span className="truncate">{doc.filename}</span>
+                          {doc.vector_status === "INDEXING" && (
+                            <span
+                              className="inline-flex shrink-0 items-center rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-800 dark:bg-blue-900/50 dark:text-blue-300"
+                              title="Indexing for AI search"
+                            >
+                              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                              Indexing
+                            </span>
+                          )}
+                          {doc.vector_status === "READY" && (
+                            <span
+                              className="inline-flex shrink-0 items-center rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-800 dark:bg-green-900/50 dark:text-green-300"
+                              title="Ready for AI search"
+                            >
+                              AI Ready
+                            </span>
+                          )}
+                          {doc.vector_status === "ERROR" && (
+                            <span
+                              className="inline-flex shrink-0 items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-800 dark:bg-red-900/50 dark:text-red-300"
+                              title="Vectorization failed"
+                            >
+                              Index Error
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

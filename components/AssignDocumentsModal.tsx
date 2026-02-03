@@ -10,6 +10,7 @@ import {
   FileText,
   Folder,
   FolderOpen,
+  Loader2,
   Minus,
   Plus,
 } from "lucide-react";
@@ -53,8 +54,29 @@ function DocumentRow({
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
           <FileText className="h-4 w-4" />
         </div>
-        <div className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
-          {doc.filename}
+        <div className="flex flex-col overflow-hidden">
+          <div className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
+            {doc.filename}
+          </div>
+          {doc.vector_status && (
+            <div className="mt-0.5 flex items-center gap-1.5">
+              {doc.vector_status === "INDEXING" && (
+                <span className="flex items-center gap-1 text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400">
+                  <Loader2 className="h-2.5 w-2.5 animate-spin" /> Indexing
+                </span>
+              )}
+              {doc.vector_status === "READY" && (
+                <span className="text-[10px] uppercase font-bold text-green-600 dark:text-green-400">
+                  AI Ready
+                </span>
+              )}
+              {doc.vector_status === "ERROR" && (
+                <span className="text-[10px] uppercase font-bold text-red-600 dark:text-red-400">
+                  Index Error
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
