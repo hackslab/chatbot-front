@@ -60,6 +60,9 @@ export interface CreateAiModelDto {
 
 export interface UpdateAiModelDto extends Partial<CreateAiModelDto> {}
 
+export type DocumentStatus = "PENDING" | "INDEXING" | "READY" | "ERROR";
+export type ApplicationStatus = "PROVISIONING" | "ACTIVE" | "ERROR";
+
 export type ApplicationType =
   | "API"
   | "TELEGRAM_BOT"
@@ -75,6 +78,7 @@ export interface Application {
   organization_id: string;
   temperature: number;
   type: ApplicationType;
+  status?: ApplicationStatus;
   api_key?: string | null;
   bot_token?: string | null;
   created_at?: string;
@@ -86,6 +90,8 @@ export interface AssignedDocument {
   filename: string;
   storage_uri: string;
   mime_type: string;
+  status?: DocumentStatus;
+  error_message?: string | null;
 }
 
 export interface LoginResponse {

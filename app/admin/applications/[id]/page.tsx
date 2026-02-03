@@ -15,10 +15,53 @@ import AssignDocumentsModal from "@/components/AssignDocumentsModal";
 import RemoveAssignedDocumentButton from "@/components/RemoveAssignedDocumentButton";
 import EditApplicationModal from "@/components/EditApplicationModal";
 import DeleteApplicationButton from "@/components/DeleteApplicationButton";
+import TestChatbotCard from "@/components/TestChatbotCard";
 import {
   formatApplicationType,
   resolveApplicationType,
 } from "@/lib/application";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react"; // Import icons
+
+function StatusBadge({
+  status,
+  error,
+}: {
+  status?: string;
+  error?: string | null;
+}) {
+  if (!status || status === "PENDING" || status === "INDEXING") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        {status === "INDEXING" ? "Indexing" : "Pending"}
+      </span>
+    );
+  }
+  if (status === "READY" || status === "ACTIVE") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900/20 dark:text-green-400">
+        <CheckCircle2 className="h-3 w-3" />
+        {status === "ACTIVE" ? "Active" : "Ready"}
+      </span>
+    );
+  }
+  if (status === "ERROR") {
+    return (
+      <span
+        title={error || "Unknown error"}
+        className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700 dark:bg-red-900/20 dark:text-red-400 cursor-help"
+      >
+        <AlertCircle className="h-3 w-3" />
+        Error
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-50 px-2 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+      {status}
+    </span>
+  );
+}
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
@@ -311,6 +354,14 @@ export default async function ApplicationDetailsPage({
             </div>
             <div className="grid grid-cols-3 gap-4">
               <dt className="font-medium text-zinc-500 dark:text-zinc-400">
+                Status
+              </dt>
+              <dd className="col-span-2 text-zinc-900 dark:text-zinc-100">
+                <StatusBadge status={application.status} />
+              </dd>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <dt className="font-medium text-zinc-500 dark:text-zinc-400">
                 AI Model
               </dt>
               <dd className="col-span-2 font-medium text-zinc-900 dark:text-zinc-100">
@@ -368,86 +419,102 @@ export default async function ApplicationDetailsPage({
         )}
       </div>
 
-      <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-              Knowledge Base
-            </h2>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Assign documents to power retrieval for this application.
-            </p>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-2">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                Knowledge Base
+              </h2>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                Assign documents to power retrieval for this application.
+              </p>
+            </div>
+            <AssignDocumentsModal
+              applicationId={application.id}
+              documents={documents}
+              folders={folders}
+              assignedDocumentIds={assignedIds}
+              iconOnly
+            />
           </div>
-          <AssignDocumentsModal
-            applicationId={application.id}
-            documents={documents}
-            folders={folders}
-            assignedDocumentIds={assignedIds}
-            iconOnly
-          />
+
+          <div className="mt-6 overflow-x-auto">
+            <table className="w-full text-left text-sm text-zinc-500 dark:text-zinc-400">
+              <thead className="bg-zinc-50 text-xs uppercase text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                <tr>
+                  <th scope="col" className="px-6 py-3">
+                    Document
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Storage URI
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Status
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Type
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                {assignedDocuments.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-6 py-12 text-center text-zinc-500"
+                    >
+                      No documents assigned yet.
+                    </td>
+                  </tr>
+                ) : (
+                  assignedDocuments.map((doc) => {
+                    const storagePath = formatStorageUri(doc.storage_uri);
+                    return (
+                      <tr
+                        key={doc.id}
+                        className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
+                      >
+                        <td className="px-6 py-4 font-medium text-zinc-900 dark:text-zinc-100">
+                          {doc.filename}
+                        </td>
+                        <td
+                          className="px-6 py-4 max-w-xs truncate"
+                          title={storagePath}
+                        >
+                          {storagePath}
+                        </td>
+                        <td className="px-6 py-4">
+                          <StatusBadge
+                            status={doc.status}
+                            error={doc.error_message}
+                          />
+                        </td>
+                        <td className="px-6 py-4 font-mono text-xs">
+                          {doc.mime_type}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <RemoveAssignedDocumentButton
+                            applicationId={application.id}
+                            documentId={doc.id}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <div className="mt-6 overflow-x-auto">
-          <table className="w-full text-left text-sm text-zinc-500 dark:text-zinc-400">
-            <thead className="bg-zinc-50 text-xs uppercase text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-              <tr>
-                <th scope="col" className="px-6 py-3">
-                  Document
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Storage URI
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Type
-                </th>
-                <th scope="col" className="px-6 py-3 text-right">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-              {assignedDocuments.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-6 py-12 text-center text-zinc-500"
-                  >
-                    No documents assigned yet.
-                  </td>
-                </tr>
-              ) : (
-                assignedDocuments.map((doc) => {
-                  const storagePath = formatStorageUri(doc.storage_uri);
-                  return (
-                    <tr
-                      key={doc.id}
-                      className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
-                    >
-                      <td className="px-6 py-4 font-medium text-zinc-900 dark:text-zinc-100">
-                        {doc.filename}
-                      </td>
-                      <td
-                        className="px-6 py-4 max-w-xs truncate"
-                        title={storagePath}
-                      >
-                        {storagePath}
-                      </td>
-                      <td className="px-6 py-4 font-mono text-xs">
-                        {doc.mime_type}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <RemoveAssignedDocumentButton
-                          applicationId={application.id}
-                          documentId={doc.id}
-                        />
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+        <TestChatbotCard
+          applicationId={application.id}
+          apiKey={resolvedType === "API" ? application.api_key : null}
+        />
       </div>
     </div>
   );
