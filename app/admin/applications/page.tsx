@@ -103,9 +103,9 @@ async function getAiModels(): Promise<AiModel[]> {
 export default async function ApplicationsPage({
   searchParams,
 }: {
-  searchParams: { organizationId?: string };
+  searchParams: Promise<{ organizationId?: string }>;
 }) {
-  const organizationId = searchParams.organizationId;
+  const { organizationId } = await searchParams;
   const [applications, organizations, aiModels] = await Promise.all([
     getApplications(),
     getOrganizations(),
@@ -192,7 +192,10 @@ export default async function ApplicationsPage({
                           aiModels={aiModels}
                           iconOnly
                         />
-                        <DeleteApplicationButton applicationId={app.id} iconOnly />
+                        <DeleteApplicationButton
+                          applicationId={app.id}
+                          iconOnly
+                        />
                       </div>
                     </td>
                   </tr>
