@@ -2,7 +2,7 @@
 
 ## Overview
 
-This API powers the AIJon SaaS platform for managing AI chat applications. It allows administrators to manage organizations, documents, and AI configurations, while providing a dedicated endpoint for end-users to interact with AI bots.
+This API powers the AIJon platform for managing AI chat applications. It allows administrators to manage organizations, documents, and AI configurations, while providing a dedicated endpoint for end-users to interact with AI bots.
 
 ## Base URL
 
